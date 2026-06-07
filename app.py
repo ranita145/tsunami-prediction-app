@@ -11,8 +11,6 @@ from train_model import (
     MODEL_PATH,
     METADATA_PATH,
     FEATURES,
-    NUMERIC_FEATURES,
-    CATEGORICAL_FEATURES,
     prepare_dataframe,
     train_and_save,
 )
@@ -46,19 +44,10 @@ html, body, [class*="css"] {
     border-right: 1px solid rgba(82, 224, 255, 0.20);
 }
 
-[data-testid="stSidebar"] h1,
-[data-testid="stSidebar"] h2,
-[data-testid="stSidebar"] h3,
-[data-testid="stSidebar"] p,
-[data-testid="stSidebar"] span,
-[data-testid="stSidebar"] label {
-    color: #F3FBFF !important;
-}
-
 .block-container {
     padding-top: 2rem;
     padding-bottom: 3rem;
-    max-width: 1180px;
+    max-width: 1220px;
 }
 
 .hero-card {
@@ -79,7 +68,7 @@ html, body, [class*="css"] {
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(90deg, rgba(3, 13, 18, 0.85), rgba(3, 13, 18, 0.55), rgba(3, 13, 18, 0.78));
+    background: linear-gradient(90deg, rgba(3, 13, 18, 0.88), rgba(3, 13, 18, 0.56), rgba(3, 13, 18, 0.78));
     z-index: 0;
 }
 
@@ -98,13 +87,13 @@ html, body, [class*="css"] {
     color: #9AF3FF;
     border: 1px solid rgba(56, 232, 255, 0.28);
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 800;
     letter-spacing: .02em;
     margin-bottom: 16px;
 }
 
 .hero-title {
-    font-size: clamp(34px, 5vw, 64px);
+    font-size: clamp(34px, 5vw, 62px);
     line-height: 1.02;
     font-weight: 800;
     letter-spacing: -0.05em;
@@ -117,7 +106,7 @@ html, body, [class*="css"] {
     margin-top: 16px;
     color: #B6D8E2;
     font-size: 17px;
-    max-width: 820px;
+    max-width: 860px;
 }
 
 .hero-warning {
@@ -127,7 +116,7 @@ html, body, [class*="css"] {
     background: rgba(255, 209, 102, 0.13);
     border: 1px solid rgba(255, 209, 102, 0.26);
     color: #FFE7A3;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .section-card {
@@ -150,7 +139,7 @@ html, body, [class*="css"] {
 .mini-label {
     color: #9CCBD7;
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 800;
     text-transform: uppercase;
     letter-spacing: .08em;
     margin-bottom: 8px;
@@ -191,20 +180,9 @@ html, body, [class*="css"] {
     margin-bottom: 16px;
 }
 
-.high-risk {
-    color: #FF6B6B;
-    font-weight: 800;
-}
-
-.medium-risk {
-    color: #FFD166;
-    font-weight: 800;
-}
-
-.low-risk {
-    color: #58F29C;
-    font-weight: 800;
-}
+.high-risk { color: #FF6B6B; font-weight: 800; }
+.medium-risk { color: #FFD166; font-weight: 800; }
+.low-risk { color: #58F29C; font-weight: 800; }
 
 div[data-testid="stMetric"] {
     background: rgba(7, 28, 37, 0.78);
@@ -262,8 +240,14 @@ div[data-testid="stMetricValue"] {
     color: #FFFFFF !important;
 }
 
-hr {
-    border-color: rgba(143, 227, 255, 0.12);
+.interactive-note {
+    padding: 13px 16px;
+    border-radius: 16px;
+    background: rgba(56, 232, 255, 0.10);
+    border: 1px solid rgba(56, 232, 255, 0.18);
+    color: #C8F8FF;
+    font-size: 14px;
+    margin-bottom: 18px;
 }
 
 .footer {
@@ -281,7 +265,6 @@ st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 @st.cache_resource
 def load_or_train_model():
-    """Load saved sklearn pipeline. If missing, train it automatically."""
     if not MODEL_PATH.exists() or not METADATA_PATH.exists():
         train_and_save(DATA_PATH, MODEL_PATH)
 
@@ -294,7 +277,6 @@ def load_or_train_model():
 
 
 def get_tsunami_probability(model, data: pd.DataFrame) -> np.ndarray:
-    """Return probability for class 1 = tsunami if predict_proba is available."""
     if not hasattr(model, "predict_proba"):
         return np.full(shape=(len(data),), fill_value=np.nan)
 
@@ -341,99 +323,57 @@ def make_prediction(input_df: pd.DataFrame, model):
     result["predicted_tsunami"] = prediction.astype(int)
     result["probability_tsunami"] = probability
     result["risk_label"] = [probability_to_risk_label(p) for p in probability]
-
     return result
+
+
+def build_single_input_from_state():
+    return pd.DataFrame([{
+        "magnitude": st.session_state.get("magnitude", 6.8),
+        "cdi": st.session_state.get("cdi", 5),
+        "mmi": st.session_state.get("mmi", 4),
+        "sig": st.session_state.get("sig", 735),
+        "nst": st.session_state.get("nst", 99),
+        "dmin": st.session_state.get("dmin", 2.229),
+        "gap": st.session_state.get("gap", 34.0),
+        "depth": st.session_state.get("depth", 25.0),
+        "latitude": st.session_state.get("latitude", -4.9559),
+        "longitude": st.session_state.get("longitude", 100.7380),
+        "alert": None if st.session_state.get("alert", "Unknown") == "Unknown" else st.session_state.get("alert"),
+        "net": None if st.session_state.get("net", "Unknown") == "Unknown" else st.session_state.get("net"),
+        "magType": None if st.session_state.get("mag_type", "Unknown") == "Unknown" else st.session_state.get("mag_type"),
+        "continent": None if st.session_state.get("continent", "Unknown") == "Unknown" else st.session_state.get("continent"),
+        "country": None if str(st.session_state.get("country", "")).strip() == "" else st.session_state.get("country"),
+    }])
+
+
+def set_scenario(scenario):
+    for key, value in scenario.items():
+        st.session_state[key] = value
+
+
+SCENARIOS = {
+    "Indonesia Offshore Strong": {
+        "magnitude": 7.8, "depth": 18.0, "latitude": -4.9559, "longitude": 100.7380,
+        "cdi": 7, "mmi": 7, "sig": 1100, "nst": 140, "dmin": 1.2, "gap": 28.0,
+        "alert": "red", "mag_type": "mww", "net": "us", "continent": "Asia", "country": "Indonesia",
+    },
+    "Japan Moderate": {
+        "magnitude": 6.7, "depth": 35.0, "latitude": 38.2970, "longitude": 142.3720,
+        "cdi": 5, "mmi": 5, "sig": 700, "nst": 120, "dmin": 1.8, "gap": 38.0,
+        "alert": "yellow", "mag_type": "mww", "net": "us", "continent": "Asia", "country": "Japan",
+    },
+    "Deep Inland Low Risk": {
+        "magnitude": 5.8, "depth": 250.0, "latitude": 35.0, "longitude": 70.0,
+        "cdi": 3, "mmi": 3, "sig": 420, "nst": 60, "dmin": 4.5, "gap": 80.0,
+        "alert": "green", "mag_type": "mb", "net": "us", "continent": "Asia", "country": "Afghanistan",
+    },
+}
 
 
 bundle, metadata = load_or_train_model()
 model = bundle["model"]
 metrics = metadata.get("holdout_metrics", {})
 
-# Sidebar
-with st.sidebar:
-    st.markdown("## 🌊 Model Center")
-    st.markdown("**Selected model:**  \nTuned Random Forest")
-    st.markdown("**Target:** `tsunami`")
-    st.markdown("---")
-
-    st.metric("Accuracy", f"{metrics.get('accuracy', 0):.4f}")
-    st.metric("Recall Macro", f"{metrics.get('recall_macro', 0):.4f}")
-    st.metric("F1 Macro", f"{metrics.get('f1_macro', 0):.4f}")
-
-    st.markdown("---")
-    st.markdown("### Class Label")
-    st.markdown("**0** = Non-tsunami")
-    st.markdown("**1** = Tsunami-related")
-    st.markdown("---")
-    st.caption("Academic prototype only. Not an official tsunami warning system.")
-
-# Hero
-st.markdown(
-    """
-    <div class="hero-card">
-      <div class="hero-content">
-        <div class="badge">🌐 IS411 Data Modelling • Group 09</div>
-        <h1 class="hero-title">Tsunami Potential Prediction</h1>
-        <p class="hero-subtitle">
-          A machine learning dashboard to classify tsunami potential based on earthquake characteristics
-          such as magnitude, depth, intensity, location, alert category, and seismic indicators.
-        </p>
-        <div class="hero-warning">
-          ⚠️ Academic prototype only. This dashboard is not a replacement for official tsunami early warning systems.
-        </div>
-      </div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
-
-# Metric cards below hero
-col_a, col_b, col_c = st.columns(3)
-with col_a:
-    st.markdown(
-        f"""
-        <div class="mini-card">
-          <div class="mini-label">Main Model</div>
-          <div class="mini-value">Random Forest</div>
-          <div class="mini-note">Tuned with selected hyperparameters</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-with col_b:
-    st.markdown(
-        f"""
-        <div class="mini-card">
-          <div class="mini-label">Holdout F1 Macro</div>
-          <div class="mini-value">{metrics.get('f1_macro', 0):.4f}</div>
-          <div class="mini-note">Primary metric for imbalanced target</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-with col_c:
-    class_dist = metadata.get("class_distribution", {})
-    total_records = sum(class_dist.values()) if isinstance(class_dist, dict) else 0
-    st.markdown(
-        f"""
-        <div class="mini-card">
-          <div class="mini-label">Dataset Records</div>
-          <div class="mini-value">{total_records}</div>
-          <div class="mini-note">Earthquake events used for modelling</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-st.markdown("")
-
-tab_single, tab_batch, tab_about = st.tabs([
-    "🔍 Single Prediction",
-    "📁 Batch CSV Prediction",
-    "📌 About Deployment",
-])
-
-# Load dataset only for default values and selectbox options.
 if DATA_PATH.exists():
     reference_df = pd.read_csv(DATA_PATH)
 else:
@@ -447,63 +387,145 @@ def get_category_options(column, fallback):
     return fallback
 
 
+# Initialize session defaults
+DEFAULTS = {
+    "magnitude": 6.8,
+    "depth": 25.0,
+    "latitude": -4.9559,
+    "longitude": 100.7380,
+    "cdi": 5,
+    "mmi": 3,
+    "sig": 737,
+    "nst": 99,
+    "dmin": 2.229,
+    "gap": 30.0,
+    "alert": "red",
+    "mag_type": "mb",
+    "net": "duputel",
+    "continent": "Asia",
+    "country": "Indonesia",
+}
+for key, value in DEFAULTS.items():
+    st.session_state.setdefault(key, value)
+
+
+with st.sidebar:
+    st.markdown("## 🌊 Model Center")
+    st.markdown("**Selected model:**  \nTuned Random Forest")
+    st.markdown("**Target:** `tsunami`")
+    st.markdown("---")
+    st.metric("Accuracy", f"{metrics.get('accuracy', 0):.4f}")
+    st.metric("Recall Macro", f"{metrics.get('recall_macro', 0):.4f}")
+    st.metric("F1 Macro", f"{metrics.get('f1_macro', 0):.4f}")
+    st.markdown("---")
+    st.markdown("### Class Label")
+    st.markdown("**0** = Non-tsunami")
+    st.markdown("**1** = Tsunami-related")
+    st.markdown("---")
+    st.caption("Academic prototype only. Not an official tsunami warning system.")
+
+
+st.markdown(
+    """
+    <div class="hero-card">
+      <div class="hero-content">
+        <div class="badge">🌐 IS411 Data Modelling • Group 09</div>
+        <h1 class="hero-title">Interactive Tsunami Potential Dashboard</h1>
+        <p class="hero-subtitle">
+          Explore earthquake scenarios, adjust parameters, compare what-if results, and upload CSV data
+          to classify tsunami potential using the selected Tuned Random Forest model.
+        </p>
+        <div class="hero-warning">
+          ⚠️ Academic prototype only. This dashboard is not a replacement for official tsunami early warning systems.
+        </div>
+      </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+col_a, col_b, col_c = st.columns(3)
+with col_a:
+    st.markdown(f"""<div class="mini-card"><div class="mini-label">Main Model</div><div class="mini-value">Random Forest</div><div class="mini-note">Tuned with selected hyperparameters</div></div>""", unsafe_allow_html=True)
+with col_b:
+    st.markdown(f"""<div class="mini-card"><div class="mini-label">Holdout F1 Macro</div><div class="mini-value">{metrics.get('f1_macro', 0):.4f}</div><div class="mini-note">Primary metric for imbalanced target</div></div>""", unsafe_allow_html=True)
+with col_c:
+    class_dist = metadata.get("class_distribution", {})
+    total_records = sum(class_dist.values()) if isinstance(class_dist, dict) else 0
+    st.markdown(f"""<div class="mini-card"><div class="mini-label">Dataset Records</div><div class="mini-value">{total_records}</div><div class="mini-note">Earthquake events used for modelling</div></div>""", unsafe_allow_html=True)
+
+st.markdown("")
+
+tab_single, tab_simulator, tab_map, tab_batch, tab_about = st.tabs([
+    "🔍 Interactive Prediction",
+    "🧪 What-if Simulator",
+    "🗺️ Location Explorer",
+    "📁 Batch CSV Prediction",
+    "📌 About Deployment",
+])
+
+
 with tab_single:
     st.markdown('<div class="section-card">', unsafe_allow_html=True)
-    st.subheader("Single Earthquake Prediction")
-    st.write("Input earthquake characteristics below, then click **Predict tsunami potential**.")
+    st.subheader("Interactive Earthquake Prediction")
+    st.markdown('<div class="interactive-note">Choose a preset scenario or manually adjust earthquake parameters. The prediction updates when you click the button.</div>', unsafe_allow_html=True)
+
+    st.markdown("#### Quick Scenario Presets")
+    p1, p2, p3 = st.columns(3)
+    if p1.button("🌊 Indonesia Offshore Strong", use_container_width=True):
+        set_scenario(SCENARIOS["Indonesia Offshore Strong"])
+        st.rerun()
+    if p2.button("🇯🇵 Japan Moderate", use_container_width=True):
+        set_scenario(SCENARIOS["Japan Moderate"])
+        st.rerun()
+    if p3.button("✅ Deep Inland Low Risk", use_container_width=True):
+        set_scenario(SCENARIOS["Deep Inland Low Risk"])
+        st.rerun()
 
     st.markdown("#### 🌋 Core Earthquake Characteristics")
     col1, col2, col3 = st.columns(3)
-
     with col1:
-        magnitude = st.number_input("Magnitude", value=6.80, min_value=0.0, max_value=10.0, step=0.1)
-        depth = st.number_input("Depth (km)", value=25.0, min_value=0.0, max_value=800.0, step=1.0)
-        latitude = st.number_input("Latitude", value=-4.9559, min_value=-90.0, max_value=90.0, step=0.0001, format="%.4f")
-
+        st.slider("Magnitude", 0.0, 10.0, key="magnitude", step=0.1)
+        st.slider("Depth (km)", 0.0, 800.0, key="depth", step=1.0)
+        st.number_input("Latitude", min_value=-90.0, max_value=90.0, key="latitude", step=0.0001, format="%.4f")
     with col2:
-        cdi = st.number_input("CDI", value=5, min_value=0, max_value=12, step=1)
-        mmi = st.number_input("MMI", value=4, min_value=0, max_value=12, step=1)
-        longitude = st.number_input("Longitude", value=100.7380, min_value=-180.0, max_value=180.0, step=0.0001, format="%.4f")
-
+        st.slider("CDI", 0, 12, key="cdi", step=1)
+        st.slider("MMI", 0, 12, key="mmi", step=1)
+        st.number_input("Longitude", min_value=-180.0, max_value=180.0, key="longitude", step=0.0001, format="%.4f")
     with col3:
-        sig = st.number_input("Significance score (sig)", value=735, min_value=0, step=1)
-        nst = st.number_input("Number of seismic stations (nst)", value=99, min_value=0, step=1)
-        gap = st.number_input("Azimuthal gap", value=34.0, min_value=0.0, max_value=360.0, step=1.0)
+        st.slider("Significance score (sig)", 0, 3000, key="sig", step=1)
+        st.slider("Number of seismic stations (nst)", 0, 1000, key="nst", step=1)
+        st.slider("Azimuthal gap", 0.0, 360.0, key="gap", step=1.0)
 
     st.markdown("#### 🛰️ Seismic & Location Metadata")
     col4, col5, col6 = st.columns(3)
     with col4:
-        dmin = st.number_input("Minimum distance (dmin)", value=2.229, min_value=0.0, step=0.001, format="%.3f")
-        alert = st.selectbox("Alert", get_category_options("alert", ["Unknown", "green", "yellow", "orange", "red"]))
+        st.number_input("Minimum distance (dmin)", min_value=0.0, key="dmin", step=0.001, format="%.3f")
+        alert_options = get_category_options("alert", ["Unknown", "green", "yellow", "orange", "red"])
+        if st.session_state["alert"] not in alert_options:
+            alert_options.append(st.session_state["alert"])
+        st.selectbox("Alert", alert_options, key="alert")
     with col5:
-        mag_type = st.selectbox("Magnitude Type", get_category_options("magType", ["Unknown", "mww", "mw", "mb", "ms"]))
-        net = st.selectbox("Seismic Network Code", get_category_options("net", ["Unknown", "us"]))
+        mag_options = get_category_options("magType", ["Unknown", "mww", "mw", "mb", "ms"])
+        if st.session_state["mag_type"] not in mag_options:
+            mag_options.append(st.session_state["mag_type"])
+        st.selectbox("Magnitude Type", mag_options, key="mag_type")
+
+        net_options = get_category_options("net", ["Unknown", "us"])
+        if st.session_state["net"] not in net_options:
+            net_options.append(st.session_state["net"])
+        st.selectbox("Seismic Network Code", net_options, key="net")
     with col6:
-        continent = st.selectbox("Continent", get_category_options("continent", ["Unknown", "Asia", "Oceania", "North America", "South America", "Europe", "Africa"]))
-        country = st.text_input("Country", value="Indonesia")
+        continent_options = get_category_options("continent", ["Unknown", "Asia", "Oceania", "North America", "South America", "Europe", "Africa"])
+        if st.session_state["continent"] not in continent_options:
+            continent_options.append(st.session_state["continent"])
+        st.selectbox("Continent", continent_options, key="continent")
+        st.text_input("Country", key="country")
 
-    single_input = pd.DataFrame([{
-        "magnitude": magnitude,
-        "cdi": cdi,
-        "mmi": mmi,
-        "sig": sig,
-        "nst": nst,
-        "dmin": dmin,
-        "gap": gap,
-        "depth": depth,
-        "latitude": latitude,
-        "longitude": longitude,
-        "alert": None if alert == "Unknown" else alert,
-        "net": None if net == "Unknown" else net,
-        "magType": None if mag_type == "Unknown" else mag_type,
-        "continent": None if continent == "Unknown" else continent,
-        "country": None if country.strip() == "" else country,
-    }])
+    current_input = build_single_input_from_state()
 
-    predict_clicked = st.button("Predict tsunami potential", type="primary", use_container_width=True)
-
-    if predict_clicked:
-        result = make_prediction(single_input, model)
+    if st.button("Predict tsunami potential", type="primary", use_container_width=True):
+        result = make_prediction(current_input, model)
         pred = int(result.loc[0, "predicted_tsunami"])
         prob = float(result.loc[0, "probability_tsunami"])
         risk = result.loc[0, "risk_label"]
@@ -517,7 +539,7 @@ with tab_single:
             <div class="result-card">
               <div class="result-title">{emoji} Prediction Result: {label}</div>
               <div class="result-desc">
-                The model estimates a tsunami-related probability of <b>{prob:.2%}</b>.
+                Estimated tsunami-related probability: <b>{prob:.2%}</b>.
                 Risk category: <span class="{css_class}">{risk}</span>.
               </div>
             </div>
@@ -529,14 +551,102 @@ with tab_single:
         res_col1.metric("Predicted Class", f"{pred}")
         res_col2.metric("Probability Tsunami", f"{prob:.2%}")
         res_col3.metric("Risk Label", risk)
+        st.progress(min(max(prob, 0), 1), text=f"Tsunami probability: {prob:.2%}")
+
+        st.markdown("#### Current Location")
+        try:
+            map_df = pd.DataFrame({"lat": [float(st.session_state["latitude"])], "lon": [float(st.session_state["longitude"])]})
+            st.map(map_df, latitude="lat", longitude="lon", zoom=3)
+        except Exception:
+            st.info("Map preview is unavailable for the current coordinate input.")
 
         st.markdown("#### Prediction Detail")
-        st.dataframe(
-            result[["predicted_tsunami", "probability_tsunami", "risk_label"] + FEATURES],
-            use_container_width=True,
-            hide_index=True,
-        )
+        st.dataframe(result[["predicted_tsunami", "probability_tsunami", "risk_label"] + FEATURES], use_container_width=True, hide_index=True)
 
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+with tab_simulator:
+    st.markdown('<div class="section-card">', unsafe_allow_html=True)
+    st.subheader("What-if Simulator")
+    st.write("This section compares the current input with automatic variations. It helps demonstrate how changes in magnitude, depth, and alert category may affect the predicted probability.")
+
+    base_input = build_single_input_from_state()
+    scenarios = []
+
+    def add_variant(name, changes):
+        row = base_input.copy()
+        for k, v in changes.items():
+            row[k] = v
+        row["scenario"] = name
+        scenarios.append(row)
+
+    add_variant("Current input", {})
+    add_variant("Magnitude +0.5", {"magnitude": min(float(base_input.loc[0, "magnitude"]) + 0.5, 10.0)})
+    add_variant("Magnitude +1.0", {"magnitude": min(float(base_input.loc[0, "magnitude"]) + 1.0, 10.0)})
+    add_variant("Shallower depth", {"depth": max(float(base_input.loc[0, "depth"]) - 20.0, 0.0)})
+    add_variant("Deeper depth", {"depth": min(float(base_input.loc[0, "depth"]) + 100.0, 800.0)})
+    add_variant("Alert green", {"alert": "green"})
+    add_variant("Alert red", {"alert": "red"})
+
+    scenario_df = pd.concat(scenarios, ignore_index=True)
+    scenario_names = scenario_df.pop("scenario")
+    scenario_result = make_prediction(scenario_df, model)
+    scenario_result.insert(0, "scenario", scenario_names)
+
+    chart_df = scenario_result[["scenario", "probability_tsunami"]].set_index("scenario")
+    st.bar_chart(chart_df)
+
+    st.dataframe(
+        scenario_result[["scenario", "predicted_tsunami", "probability_tsunami", "risk_label", "magnitude", "depth", "alert", "latitude", "longitude"]],
+        use_container_width=True,
+        hide_index=True,
+    )
+
+    st.markdown(
+        """
+        **Interpretation tip:** This is not causal explanation. It is an interactive sensitivity check based on model predictions.
+        """
+    )
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+with tab_map:
+    st.markdown('<div class="section-card">', unsafe_allow_html=True)
+    st.subheader("Location Explorer")
+    st.write("Move the coordinate input in the first tab, then open this tab to preview the selected epicenter location.")
+
+    loc_col1, loc_col2 = st.columns([1, 2])
+    with loc_col1:
+        current_input = build_single_input_from_state()
+        loc_result = make_prediction(current_input, model)
+        loc_prob = float(loc_result.loc[0, "probability_tsunami"])
+        loc_pred = int(loc_result.loc[0, "predicted_tsunami"])
+        loc_risk = loc_result.loc[0, "risk_label"]
+        st.metric("Current Latitude", f"{float(st.session_state['latitude']):.4f}")
+        st.metric("Current Longitude", f"{float(st.session_state['longitude']):.4f}")
+        st.metric("Predicted Class", f"{loc_pred}")
+        st.metric("Tsunami Probability", f"{loc_prob:.2%}")
+        st.metric("Risk Label", loc_risk)
+
+    with loc_col2:
+        try:
+            map_df = pd.DataFrame({
+                "lat": [float(st.session_state["latitude"])],
+                "lon": [float(st.session_state["longitude"])],
+            })
+            st.map(map_df, latitude="lat", longitude="lon", zoom=3)
+        except Exception:
+            st.info("Map preview is unavailable for the current coordinate input.")
+
+    st.markdown("#### Dataset Geospatial Preview")
+    if not reference_df.empty and {"latitude", "longitude"}.issubset(reference_df.columns):
+        sample_size = min(500, len(reference_df))
+        sample_df = reference_df[["latitude", "longitude"]].dropna().sample(sample_size, random_state=42)
+        sample_df = sample_df.rename(columns={"latitude": "lat", "longitude": "lon"})
+        st.map(sample_df, latitude="lat", longitude="lon", zoom=1)
+    else:
+        st.info("Dataset geospatial preview is unavailable.")
     st.markdown("</div>", unsafe_allow_html=True)
 
 
@@ -556,6 +666,14 @@ with tab_batch:
         st.dataframe(batch_df.head(10), use_container_width=True, hide_index=True)
 
         result_df = make_prediction(batch_df, model)
+
+        st.markdown("#### Prediction Summary")
+        summary_col1, summary_col2, summary_col3 = st.columns(3)
+        summary_col1.metric("Total Records", len(result_df))
+        summary_col2.metric("Predicted Tsunami", int((result_df["predicted_tsunami"] == 1).sum()))
+        summary_col3.metric("Average Probability", f"{result_df['probability_tsunami'].mean():.2%}")
+
+        st.bar_chart(result_df["risk_label"].value_counts())
 
         st.markdown("#### Prediction Result")
         display_columns = ["predicted_tsunami", "probability_tsunami", "risk_label"] + [col for col in FEATURES if col in result_df.columns]
@@ -579,11 +697,13 @@ with tab_about:
         """
         This dashboard deploys the selected **Tuned Random Forest** model as an academic prototype.
 
-        **Workflow:**
-        1. The app loads the saved `tsunami_tuned_random_forest.joblib` model bundle.
-        2. New data is processed using the same preprocessing pipeline used during training.
-        3. The pipeline applies median imputation, categorical imputation, one-hot encoding, scaling, and model prediction.
-        4. The output contains predicted class, probability score, and simple risk category.
+        **Interactive components added:**
+        - Quick scenario presets
+        - Adjustable sliders for earthquake characteristics
+        - Single prediction with probability and risk label
+        - What-if simulator
+        - Location map preview
+        - Batch CSV upload with prediction summary
 
         **Important limitation:**
         Some variables such as `alert` and `sig` may be post-event attributes. For realistic early-warning use, a separate model should be trained using only early-available earthquake features.
@@ -610,7 +730,7 @@ with tab_about:
 st.markdown(
     """
     <div class="footer">
-      IS411 Data Modelling • Group 09 • Tsunami Potential Prediction Dashboard
+      IS411 Data Modelling • Group 09 • Interactive Tsunami Potential Prediction Dashboard
     </div>
     """,
     unsafe_allow_html=True,

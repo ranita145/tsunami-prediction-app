@@ -1,26 +1,38 @@
-# Tsunami Potential Prediction Dashboard — Premium Streamlit Version
+# Interactive Tsunami Potential Prediction Dashboard
 
-This folder contains the improved visual version of the Streamlit deployment prototype.
+This is the interactive Streamlit deployment version.
 
-## Files to upload to GitHub
+## Interactive features
 
-Upload these files/folders to the root of your GitHub repository:
+- Quick scenario presets
+- Adjustable sliders and inputs
+- Prediction probability and risk label
+- What-if simulator
+- Location explorer map
+- Batch CSV prediction and summary
+- Downloadable prediction output
+
+## Files to upload/replace in GitHub
+
+Upload these files/folders to the root of the existing GitHub repository:
 
 - `app.py`
+- `.streamlit/config.toml`
+- `README_DEPLOY.md`
+
+Other files can remain the same if they already exist:
+
 - `train_model.py`
 - `requirements.txt`
 - `earthquake_data.csv`
 - `tsunami_tuned_random_forest.joblib`
 - `model_metadata.json`
-- `.streamlit/config.toml`
-- `README_DEPLOY.md`
 
-## Streamlit Cloud setting
+## Streamlit setting
 
-- Repository: your GitHub repository
 - Branch: `main`
 - Main file path: `app.py`
 
 ## Disclaimer
 
-This dashboard is an academic prototype only and is not an official tsunami early warning system.
+Academic prototype only. Not an official tsunami early warning system.
