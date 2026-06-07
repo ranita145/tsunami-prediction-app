@@ -1,0 +1,92 @@
+{
+  "project_title": "Prediction of Tsunami Potential Based on Earthquake Characteristics",
+  "model_name": "Tuned Random Forest",
+  "target": "tsunami",
+  "features": [
+    "magnitude",
+    "cdi",
+    "mmi",
+    "sig",
+    "nst",
+    "dmin",
+    "gap",
+    "depth",
+    "latitude",
+    "longitude",
+    "alert",
+    "net",
+    "magType",
+    "continent",
+    "country"
+  ],
+  "numeric_features": [
+    "magnitude",
+    "cdi",
+    "mmi",
+    "sig",
+    "nst",
+    "dmin",
+    "gap",
+    "depth",
+    "latitude",
+    "longitude"
+  ],
+  "categorical_features": [
+    "alert",
+    "net",
+    "magType",
+    "continent",
+    "country"
+  ],
+  "dataset_rows": 782,
+  "dataset_columns": 19,
+  "class_distribution": {
+    "0": 478,
+    "1": 304
+  },
+  "holdout_metrics": {
+    "accuracy": 0.9030612244897959,
+    "precision_macro": 0.8951380744215802,
+    "recall_macro": 0.906359649122807,
+    "f1_macro": 0.8994790401382029,
+    "confusion_matrix": [
+      [
+        107,
+        13
+      ],
+      [
+        6,
+        70
+      ]
+    ],
+    "classification_report": {
+      "0": {
+        "precision": 0.9469026548672567,
+        "recall": 0.8916666666666667,
+        "f1-score": 0.9184549356223176,
+        "support": 120.0
+      },
+      "1": {
+        "precision": 0.8433734939759037,
+        "recall": 0.9210526315789473,
+        "f1-score": 0.8805031446540881,
+        "support": 76.0
+      },
+      "accuracy": 0.9030612244897959,
+      "macro avg": {
+        "precision": 0.8951380744215802,
+        "recall": 0.906359649122807,
+        "f1-score": 0.8994790401382029,
+        "support": 196.0
+      },
+      "weighted avg": {
+        "precision": 0.90675869452163,
+        "recall": 0.9030612244897959,
+        "f1-score": 0.9037389350428,
+        "support": 196.0
+      }
+    }
+  },
+  "sklearn_version": "1.8.0",
+  "disclaimer": "Academic prototype only. Not a substitute for official tsunami early warning systems."
+}
